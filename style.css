@@ -1,0 +1,290 @@
+:root {
+  --ink: #0b1220;
+  --panel: #121c31;
+  --panel-line: #223255;
+  --paper: #e9edf5;
+  --fog: #8b97b4;
+  --beacon: #5eead4;
+  --beacon-dim: rgba(94, 234, 212, 0.18);
+  --amber: #f4a261;
+
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-body);
+}
+
+#map {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+}
+
+/* Leaflet tile darkening handled via CSS filter on the tile pane so we
+   don't depend on a specific dark tile provider. */
+.leaflet-tile-pane {
+  filter: brightness(0.62) saturate(1.05) contrast(1.05);
+}
+
+.leaflet-container {
+  font-family: var(--font-body);
+  background: var(--ink);
+}
+
+/* ---------------------------------------------------------------- */
+/* Top bar                                                           */
+/* ---------------------------------------------------------------- */
+
+.topbar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(18, 28, 49, 0.82);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--panel-line);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.topbar > * { pointer-events: auto; }
+
+.topbar__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--beacon);
+  box-shadow: 0 0 0 0 var(--beacon-dim);
+  animation: pulse 2.4s ease-out infinite;
+  flex: none;
+}
+
+.topbar h1 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.topbar__meta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fog);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.topbar__sep { color: var(--panel-line); }
+
+.panel-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--panel-line);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------- */
+/* Side panel                                                        */
+/* ---------------------------------------------------------------- */
+
+.panel {
+  position: absolute;
+  top: 76px;
+  right: 16px;
+  bottom: 16px;
+  width: 320px;
+  z-index: 900;
+  background: rgba(18, 28, 49, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--panel-line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel__head {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--panel-line);
+}
+
+.panel__head h2 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fog);
+  margin: 0 0 6px;
+}
+
+.panel__hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fog);
+  margin: 0;
+}
+
+.pin-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.pin-list li + li { margin-top: 4px; }
+
+.pin-card {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 10px;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  display: block;
+}
+
+.pin-card:hover,
+.pin-card:focus-visible {
+  background: rgba(94, 234, 212, 0.08);
+  border-color: var(--panel-line);
+  outline: none;
+}
+
+.pin-card__name {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.pin-card__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fog);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.empty-state,
+.error-state {
+  padding: 24px 16px;
+  color: var(--fog);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.error-state code {
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* ---------------------------------------------------------------- */
+/* Map markers                                                       */
+/* ---------------------------------------------------------------- */
+
+.beacon-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--beacon);
+  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.25);
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--panel);
+  color: var(--paper);
+  border: 1px solid var(--panel-line);
+  border-radius: 10px;
+}
+
+.leaflet-popup-tip { background: var(--panel); border: 1px solid var(--panel-line); }
+
+.popup h3 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  margin: 0 0 6px;
+}
+
+.popup dl {
+  margin: 0;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--fog);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+}
+
+.popup dt { color: var(--fog); }
+.popup dd { margin: 0; color: var(--paper); }
+
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 var(--beacon-dim); }
+  70%  { box-shadow: 0 0 0 10px rgba(94, 234, 212, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(94, 234, 212, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar__dot { animation: none; }
+}
+
+/* ---------------------------------------------------------------- */
+/* Mobile                                                             */
+/* ---------------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .topbar h1 { font-size: 14px; }
+  .topbar__meta { display: none; }
+  .panel-toggle { display: inline-block; }
+
+  .panel {
+    top: auto;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    height: 55vh;
+  }
+
+  .panel[data-collapsed="true"] { display: none; }
+}
