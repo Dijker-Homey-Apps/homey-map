@@ -16,6 +16,7 @@ In the Sheet the Homey app writes to:
 3. Format: **Comma-separated values (.csv)**
 4. Click **Publish**, confirm, and copy the URL — it looks like
    `https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv`
+   https://docs.google.com/spreadsheets/d/e/2PACX-1vSj8NCJSMvO6VpEX3D81RIpS5WY6hNIGBIjYBhLUVh9SPgUzw4gmPYK_OObGzY4agWZn2gSAiTnQwlr/pub?gid=0&single=true&output=csv 
 
 This URL is read-only and only exposes the columns already in the sheet
 (pinId, name, model, lat, lon, radiusKm, timestamp, trigger) — no one can
@@ -42,7 +43,7 @@ git init
 git add .
 git commit -m "Anonymous Homey Map site"
 git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/homey-map.git
+git remote add origin https://github.com/Dijker-Homey-Apps/homey-map.git
 git push -u origin main
 ```
 
@@ -51,7 +52,8 @@ Then on GitHub:
 1. Go to the repo's **Settings → Pages**
 2. Under "Build and deployment", set **Source: Deploy from a branch**
 3. Branch: **main**, folder: **/ (root)** → **Save**
-4. GitHub gives you a URL like `https://YOUR-USERNAME.github.io/homey-map/`
+4. GitHub gives you a URL like `https://YOUR-USERNAME.github.io/homey-map/` Dijker-Homey-App
+4. GitHub gives you a URL like `https://Dijker-Homey-App.github.io/homey-map/` 
    within a minute or two — that's the live map.
 
 No GitHub Actions or build step is needed since this is plain static
