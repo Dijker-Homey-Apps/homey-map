@@ -59,6 +59,35 @@ Then on GitHub:
 No GitHub Actions or build step is needed since this is plain static
 HTML/CSS/JS.
 
+## What's new: model icons, bolder radius rings, clustering
+
+- **Model icons**: each beacon shows a small original glyph (not Athom's
+  logo/product photo — see below) keyed off the `model` column, which is
+  expected to hold Homey's standard `modelId` string (`homey1s`, `homey5q`,
+  `shs`, etc. — whatever `system.getInfo().model` reports). The mapping
+  lives in `model-icons.js` as a short set of pattern rules (`shs`/`*bridge*`
+  → bridge glyph, `*q` → Pro glyph, `homey*` → classic glyph, anything else
+  → a muted "unknown" glyph) — extend the patterns there if you want finer
+  distinctions between generations.
+- **Radius rings are bolder now**: solid 2px stroke at 90% opacity plus a
+  visible fill, with a slow breathing pulse (`prefers-reduced-motion`
+  respected) so the fuzz radius reads as a real, current signal rather than
+  a faint decoration.
+- **Clustering**: nearby beacons collapse into a plain numbered circle
+  (via [Leaflet.markercluster](https://github.com/Leaflet/Leaflet.markercluster))
+  with no per-model icon — just a count, styled to match the rest of the
+  map. A beacon's radius ring only shows while it's displayed on its own;
+  it's hidden while folded into a cluster, and reappears once you zoom in
+  enough to split the cluster apart.
+
+**On the icons themselves**: these are small original abstract shapes I
+drew for this project (an orb + signal-arc motif), not Athom's trademarked
+Homey logo or a rendering of the physical device. If you have rights to
+Athom's own icon assets (e.g. as a registered Homey developer) and want to
+swap them in, replace the SVG strings in `model-icons.js` — the rest of the
+app just calls `HomeyModelIcons.svgFor(modelId)` and doesn't care what's
+inside them.
+
 ## Notes
 
 - **Why CSV instead of the Sheets API**: a published CSV link needs no

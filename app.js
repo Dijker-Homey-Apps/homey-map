@@ -2,6 +2,7 @@
   'use strict';
 
   var cfg = window.HOMEY_MAP_CONFIG;
+  var icons = window.HomeyModelIcons;
 
   var map = L.map('map', {
     zoomControl: false,
@@ -15,7 +16,32 @@
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
 
-  var markersLayer = L.layerGroup().addTo(map);
+  // Individual beacon markers live in this cluster group. When several
+  // are close together it collapses them into a plain numbered circle
+  // (no per-model icon) -- see iconCreateFunction below.
+  var clusterGroup = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    spiderfyOnMaxZoom: true,
+    maxClusterRadius: 60,
+    iconCreateFunction: function (cluster) {
+      var count = cluster.getChildCount();
+      var sizeClass = count < 10 ? 'small' : count < 50 ? 'medium' : 'large';
+      return L.divIcon({
+        html: '<div class="cluster-badge cluster-badge--' + sizeClass + '"><span>' + count + '</span></div>',
+        className: '',
+        iconSize: L.point(40, 40),
+      });
+    },
+  });
+  map.addLayer(clusterGroup);
+
+  // Anonymity-radius rings are drawn on their own layer, added straight
+  // to the map (not clustered -- a ring belongs to one Homey, not to a
+  // cluster bubble). Rings are only shown for beacons currently visible
+  // as their own marker; once a beacon is folded into a cluster its ring
+  // is hidden so overlapping circles don't turn into visual noise.
+  var radiusLayer = L.layerGroup().addTo(map);
+
   var pinListEl = document.getElementById('pin-list');
   var emptyStateEl = document.getElementById('empty-state');
   var errorStateEl = document.getElementById('error-state');
@@ -25,20 +51,26 @@
   var panel = document.getElementById('panel');
   var panelToggle = document.getElementById('panel-toggle');
 
+  var registry = {}; // pinId -> { marker, circle }
+
   panelToggle.addEventListener('click', function () {
     var collapsed = panel.getAttribute('data-collapsed') === 'true';
     panel.setAttribute('data-collapsed', collapsed ? 'false' : 'true');
     panelToggle.setAttribute('aria-expanded', String(collapsed));
   });
 
-  function beaconIcon() {
+  function beaconIcon(tier) {
     return L.divIcon({
       className: '',
-      html: '<div class="beacon-icon"></div>',
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-      popupAnchor: [0, -7],
+      html: '<div class="beacon-marker beacon-marker--' + tier + '">' + icons.svgFor(tier) + '</div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+      popupAnchor: [0, -14],
     });
+  }
+
+  function miniIcon(tier) {
+    return '<span class="mini-icon mini-icon--' + tier + '">' + icons.svgFor(tier) + '</span>';
   }
 
   function relativeTime(isoString) {
@@ -71,7 +103,7 @@
         return {
           pinId: (r.pinId || '').trim(),
           name: (r.name || 'Anonymous Homey').trim(),
-          model: (r.model || 'Unknown').trim(),
+          model: (r.model || 'unknown').trim(),
           lat: lat,
           lon: lon,
           radiusKm: parseFloat(r.radiusKm) || null,
@@ -81,9 +113,27 @@
       .filter(Boolean);
   }
 
+  // Hide the radius ring for any beacon currently absorbed into a
+  // cluster bubble; show it for beacons standing on their own.
+  function updateRingVisibility() {
+    Object.keys(registry).forEach(function (id) {
+      var entry = registry[id];
+      if (!entry.circle) return;
+      var visibleParent = clusterGroup.getVisibleParent(entry.marker);
+      var standsAlone = visibleParent === entry.marker;
+      if (standsAlone && !radiusLayer.hasLayer(entry.circle)) {
+        radiusLayer.addLayer(entry.circle);
+      } else if (!standsAlone && radiusLayer.hasLayer(entry.circle)) {
+        radiusLayer.removeLayer(entry.circle);
+      }
+    });
+  }
+
   function render(pins) {
-    markersLayer.clearLayers();
+    clusterGroup.clearLayers();
+    radiusLayer.clearLayers();
     pinListEl.innerHTML = '';
+    registry = {};
 
     pinCountEl.textContent = pins.length + (pins.length === 1 ? ' beacon' : ' beacons');
     lastUpdatedEl.textContent = 'checked ' + relativeTime(new Date().toISOString());
@@ -96,45 +146,51 @@
     emptyStateEl.hidden = true;
     errorStateEl.hidden = true;
 
-    var markerById = {};
+    var newMarkers = [];
 
     pins.forEach(function (pin) {
+      var tier = icons.tierFor(pin.model);
+
+      var circle = null;
       if (pin.radiusKm) {
-        L.circle([pin.lat, pin.lon], {
+        circle = L.circle([pin.lat, pin.lon], {
           radius: pin.radiusKm * 1000,
-          color: '#5eead4',
-          weight: 1,
-          opacity: 0.35,
-          fillColor: '#5eead4',
-          fillOpacity: 0.06,
-          dashArray: '4 6',
-        }).addTo(markersLayer);
+          className: 'radius-ring',
+          color: tier === 'bridge' ? '#f4a261' : '#5eead4',
+          weight: 2,
+          opacity: 0.9,
+          fillColor: tier === 'bridge' ? '#f4a261' : '#5eead4',
+          fillOpacity: 0.14,
+        });
       }
 
-      var marker = L.marker([pin.lat, pin.lon], { icon: beaconIcon() }).addTo(markersLayer);
+      var marker = L.marker([pin.lat, pin.lon], { icon: beaconIcon(tier) });
 
       var popupHtml =
         '<div class="popup">' +
-        '<h3>' + escapeHtml(pin.name) + '</h3>' +
+        '<h3>' + miniIcon(tier) + escapeHtml(pin.name) + '</h3>' +
         '<dl>' +
         '<dt>model</dt><dd>' + escapeHtml(pin.model) + '</dd>' +
-        '<dt>radius</dt><dd>' + (pin.radiusKm ? pin.radiusKm + ' km' : '—') + '</dd>' +
+        '<dt>radius</dt><dd>' + (pin.radiusKm ? pin.radiusKm + ' km' : '\u2014') + '</dd>' +
         '<dt>updated</dt><dd>' + escapeHtml(relativeTime(pin.timestamp)) + '</dd>' +
-        '<dt>pin id</dt><dd>' + escapeHtml(pin.pinId.slice(0, 10)) + '…</dd>' +
+        '<dt>pin id</dt><dd>' + escapeHtml(pin.pinId.slice(0, 10)) + '\u2026</dd>' +
         '</dl>' +
         '</div>';
       marker.bindPopup(popupHtml);
 
-      markerById[pin.pinId] = marker;
+      registry[pin.pinId] = { marker: marker, circle: circle };
+      newMarkers.push(marker);
 
       var li = document.createElement('li');
       var btn = document.createElement('button');
       btn.className = 'pin-card';
       btn.innerHTML =
-        '<div class="pin-card__name">' + escapeHtml(pin.name) + '</div>' +
+        '<div class="pin-card__row">' + miniIcon(tier) +
+        '<span class="pin-card__name">' + escapeHtml(pin.name) + '</span>' +
+        '</div>' +
         '<div class="pin-card__meta">' +
         '<span>' + escapeHtml(pin.model) + '</span>' +
-        '<span>' + (pin.radiusKm ? '±' + pin.radiusKm + 'km' : '') + '</span>' +
+        '<span>' + (pin.radiusKm ? '\u00b1' + pin.radiusKm + 'km' : '') + '</span>' +
         '<span>' + escapeHtml(relativeTime(pin.timestamp)) + '</span>' +
         '</div>';
       btn.addEventListener('click', function () {
@@ -145,19 +201,24 @@
       pinListEl.appendChild(li);
     });
 
-    var group = L.featureGroup(Object.values(markerById));
-    if (Object.keys(markerById).length > 1) {
-      map.fitBounds(group.getBounds().pad(0.25));
-    } else if (Object.keys(markerById).length === 1) {
-      map.setView(group.getBounds().getCenter(), 10);
+    clusterGroup.addLayers(newMarkers);
+    updateRingVisibility();
+
+    if (newMarkers.length > 1) {
+      map.fitBounds(clusterGroup.getBounds().pad(0.25));
+    } else if (newMarkers.length === 1) {
+      map.setView(newMarkers[0].getLatLng(), 10);
     }
   }
+
+  clusterGroup.on('animationend', updateRingVisibility);
+  map.on('zoomend', updateRingVisibility);
 
   function showError(message) {
     emptyStateEl.hidden = true;
     errorStateEl.hidden = false;
     errorDetailEl.textContent = message;
-    pinCountEl.textContent = '— beacons';
+    pinCountEl.textContent = '\u2014 beacons';
     lastUpdatedEl.textContent = 'load failed';
   }
 

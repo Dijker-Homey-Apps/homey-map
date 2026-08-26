@@ -188,10 +188,34 @@ html, body {
   outline: none;
 }
 
+.pin-card__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.mini-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 1.5px solid var(--beacon);
+  color: var(--beacon);
+}
+
+.mini-icon svg { width: 12px; height: 12px; }
+
+.mini-icon--unknown { border-style: dashed; border-color: var(--fog); color: var(--fog); }
+.mini-icon--bridge { border-color: var(--amber); color: var(--amber); }
+
 .pin-card__name {
   font-weight: 600;
   font-size: 13px;
-  margin-bottom: 2px;
 }
 
 .pin-card__meta {
@@ -223,12 +247,71 @@ html, body {
 /* Map markers                                                       */
 /* ---------------------------------------------------------------- */
 
-.beacon-icon {
-  width: 14px;
-  height: 14px;
+.beacon-marker {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: var(--beacon);
-  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 2px solid var(--beacon);
+  color: var(--beacon);
+  box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.16), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.beacon-marker svg {
+  width: 16px;
+  height: 16px;
+}
+
+.beacon-marker--unknown {
+  border-style: dashed;
+  border-color: var(--fog);
+  color: var(--fog);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.beacon-marker--bridge {
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 0 4px rgba(244, 162, 97, 0.16), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* The fuzz-radius ring. Drawn boldly on purpose — it's the whole point
+   of the map, so it shouldn't read as a faint afterthought. */
+.radius-ring {
+  animation: radius-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes radius-breathe {
+  0%, 100% { stroke-opacity: 0.9; }
+  50%      { stroke-opacity: 0.45; }
+}
+
+/* ---------------------------------------------------------------- */
+/* Clusters                                                           */
+/* ---------------------------------------------------------------- */
+
+.cluster-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(94, 234, 212, 0.14);
+  border: 2px solid var(--beacon);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  box-shadow: 0 0 0 6px rgba(94, 234, 212, 0.08), 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.cluster-badge--small  { width: 34px; height: 34px; font-size: 12px; }
+.cluster-badge--medium { width: 44px; height: 44px; font-size: 14px; }
+.cluster-badge--large  { width: 56px; height: 56px; font-size: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .radius-ring { animation: none; }
 }
 
 .leaflet-popup-content-wrapper {
@@ -243,7 +326,10 @@ html, body {
 .popup h3 {
   font-family: var(--font-display);
   font-size: 14px;
-  margin: 0 0 6px;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .popup dl {
