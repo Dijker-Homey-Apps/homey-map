@@ -206,12 +206,26 @@ html, body {
   background: var(--panel);
   border: 1.5px solid var(--beacon);
   color: var(--beacon);
+  overflow: hidden;
 }
 
 .mini-icon svg { width: 12px; height: 12px; }
 
+.mini-icon__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mini-icon__fallback {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 .mini-icon--unknown { border-style: dashed; border-color: var(--fog); color: var(--fog); }
-.mini-icon--bridge { border-color: var(--amber); color: var(--amber); }
 
 .pin-card__name {
   font-weight: 600;
@@ -258,6 +272,7 @@ html, body {
   border: 2px solid var(--beacon);
   color: var(--beacon);
   box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.16), 0 2px 6px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
 }
 
 .beacon-marker svg {
@@ -265,17 +280,26 @@ html, body {
   height: 16px;
 }
 
+.beacon-marker__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.beacon-marker__fallback {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--beacon);
+}
+
 .beacon-marker--unknown {
   border-style: dashed;
   border-color: var(--fog);
   color: var(--fog);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.beacon-marker--bridge {
-  border-color: var(--amber);
-  color: var(--amber);
-  box-shadow: 0 0 0 4px rgba(244, 162, 97, 0.16), 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 /* The fuzz-radius ring. Drawn boldly on purpose — it's the whole point

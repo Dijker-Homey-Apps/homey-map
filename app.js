@@ -59,18 +59,29 @@
     panelToggle.setAttribute('aria-expanded', String(collapsed));
   });
 
-  function beaconIcon(tier) {
+  function beaconIcon(tier, photoUrl) {
+    var inner = photoUrl
+      ? '<img class="beacon-marker__photo" src="' + photoUrl + '" alt="" '
+        + 'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';" />'
+        + '<span class="beacon-marker__fallback">' + icons.svgFor(tier) + '</span>'
+      : icons.svgFor(tier);
+
     return L.divIcon({
       className: '',
-      html: '<div class="beacon-marker beacon-marker--' + tier + '">' + icons.svgFor(tier) + '</div>',
+      html: '<div class="beacon-marker beacon-marker--' + tier + '">' + inner + '</div>',
       iconSize: [28, 28],
       iconAnchor: [14, 14],
       popupAnchor: [0, -14],
     });
   }
 
-  function miniIcon(tier) {
-    return '<span class="mini-icon mini-icon--' + tier + '">' + icons.svgFor(tier) + '</span>';
+  function miniIcon(tier, photoUrl) {
+    var inner = photoUrl
+      ? '<img class="mini-icon__photo" src="' + photoUrl + '" alt="" '
+        + 'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';" />'
+        + '<span class="mini-icon__fallback">' + icons.svgFor(tier) + '</span>'
+      : icons.svgFor(tier);
+    return '<span class="mini-icon mini-icon--' + tier + '">' + inner + '</span>';
   }
 
   function relativeTime(isoString) {
@@ -100,6 +111,7 @@
         var lat = parseFloat(r.lat);
         var lon = parseFloat(r.lon);
         if (isNaN(lat) || isNaN(lon)) return null;
+        if (String(r.trigger || '').trim().toLowerCase() === 'tombstone') return null;
         return {
           pinId: (r.pinId || '').trim(),
           name: (r.name || 'Anonymous Homey').trim(),
@@ -150,25 +162,26 @@
 
     pins.forEach(function (pin) {
       var tier = icons.tierFor(pin.model);
+      var photoUrl = icons.photoFor(pin.model);
 
       var circle = null;
       if (pin.radiusKm) {
         circle = L.circle([pin.lat, pin.lon], {
           radius: pin.radiusKm * 1000,
           className: 'radius-ring',
-          color: tier === 'bridge' ? '#f4a261' : '#5eead4',
+          color: '#5eead4',
           weight: 2,
           opacity: 0.9,
-          fillColor: tier === 'bridge' ? '#f4a261' : '#5eead4',
+          fillColor: '#5eead4',
           fillOpacity: 0.14,
         });
       }
 
-      var marker = L.marker([pin.lat, pin.lon], { icon: beaconIcon(tier) });
+      var marker = L.marker([pin.lat, pin.lon], { icon: beaconIcon(tier, photoUrl) });
 
       var popupHtml =
         '<div class="popup">' +
-        '<h3>' + miniIcon(tier) + escapeHtml(pin.name) + '</h3>' +
+        '<h3>' + miniIcon(tier, photoUrl) + escapeHtml(pin.name) + '</h3>' +
         '<dl>' +
         '<dt>model</dt><dd>' + escapeHtml(pin.model) + '</dd>' +
         '<dt>radius</dt><dd>' + (pin.radiusKm ? pin.radiusKm + ' km' : '\u2014') + '</dd>' +
@@ -185,7 +198,7 @@
       var btn = document.createElement('button');
       btn.className = 'pin-card';
       btn.innerHTML =
-        '<div class="pin-card__row">' + miniIcon(tier) +
+        '<div class="pin-card__row">' + miniIcon(tier, photoUrl) +
         '<span class="pin-card__name">' + escapeHtml(pin.name) + '</span>' +
         '</div>' +
         '<div class="pin-card__meta">' +
