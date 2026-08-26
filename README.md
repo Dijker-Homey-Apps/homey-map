@@ -16,7 +16,6 @@ In the Sheet the Homey app writes to:
 3. Format: **Comma-separated values (.csv)**
 4. Click **Publish**, confirm, and copy the URL — it looks like
    `https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv`
-   https://docs.google.com/spreadsheets/d/e/2PACX-1vSj8NCJSMvO6VpEX3D81RIpS5WY6hNIGBIjYBhLUVh9SPgUzw4gmPYK_OObGzY4agWZn2gSAiTnQwlr/pub?gid=0&single=true&output=csv 
 
 This URL is read-only and only exposes the columns already in the sheet
 (pinId, name, model, lat, lon, radiusKm, timestamp, trigger) — no one can
